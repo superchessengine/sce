@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-typedef int Color;
+typedef std::int8_t Color;
 const Color COLOR_WHITE = 1;
 const Color COLOR_BLACK = -1;
 
