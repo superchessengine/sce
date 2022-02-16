@@ -6,8 +6,8 @@
 #include "utils.h"
 #include "Engine.h"
 
-const int TTSize = 150;
-const int DEPTH = 8;
+const int TTSize = 10;
+const int DEPTH = 6;
 
 int main() {
     std::cout << sizeof(TTEntry) << std::endl;
@@ -25,6 +25,7 @@ int main() {
     std::cout << "depth: " << DEPTH << " with sorting: " << engine.sort_moves << std::endl;
 
     std::vector<std::string> game;
+    int cnt = 0;
     while (!position.is_terminal() && !position.threefold()) {
         std::cout << std::endl;
         const auto moves = engine.get_moves(position, DEPTH,
@@ -47,6 +48,7 @@ int main() {
                   << engine.static_eval_time / 1000. << "s makemove_time" << engine.makemove_time
                   << "s Threefold_time: " << engine.threefold_time << "s ttHits: " << engine.ttHits << std::endl;
 
+        print_pv_line(position, tt);
         game.emplace_back(get_san(position, max->first));
     }
 

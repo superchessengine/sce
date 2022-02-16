@@ -2,6 +2,7 @@
 // Created by khushitshah on 2/15/22.
 //
 #include <string>
+#include <iostream>
 #include "position.hpp"
 #include "utils.h"
 
@@ -90,4 +91,15 @@ std::string get_piece_char(libchess::Piece piece) noexcept {
     } else {
         return "-";
     }
+}
+
+
+// recursive function till tt_entry contains pv move.
+void print_pv_line(libchess::Position &pos, const TT &tt) {
+    auto entry = tt.get(pos.hash());
+    if (!entry->pv) return;
+    pos.makemove(entry->mv);
+    std::cout << get_san(pos, entry->mv) << " ";
+    print_pv_line(pos, tt);
+    pos.undomove();
 }

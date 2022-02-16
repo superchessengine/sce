@@ -15,6 +15,9 @@ private:
     std::vector<std::pair<libchess::Move, int>> moves;
     TT &_tt;
     int search_depth = -1;
+
+//    void sort_moves_tt(libchess::Position &pos, std::vector<libchess::Move> &moves);
+
 public:
 
     Engine(TT &tt) : _tt(tt) {}
@@ -35,6 +38,12 @@ public:
     bool sort_moves = true;
     int ttHits;
     bool iterative_deepening;
+
+    void set_scores(libchess::Position pos, std::vector<std::pair<libchess::Move, int>> &moves) const noexcept;
+
+    static int getMVVLVA(const libchess::Move &move);
+
+    void sortNextMove(int index, std::vector<std::pair<libchess::Move, int>> &moves) const noexcept;
 };
 
 
