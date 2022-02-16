@@ -13,5 +13,5 @@ cmake ..
 make
 ```
 
-- Now copy `libchess/build/static/libchess.a` to `src/libs/libchess` and `libchess/src/libchess` to `sce/libs/libchess`.
+- Now copy `libchess/build/static/libchess.a` to `src/libs/libchess` and `libchess/src/libchess/*.hpp` to `sce/libs/libchess`.
  
