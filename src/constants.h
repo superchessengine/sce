@@ -12,6 +12,7 @@ const Color COLOR_WHITE = 1;
 const Color COLOR_BLACK = -1;
 
 const int INF = 1000000000;
+const int IMMEDIATE_MATE_SCORE = 9999999;
 
 // TODO: look up better values, right now piece values are high to discourage sacrifice for positional advantage.
 const int PAWN_VALUE = 100;

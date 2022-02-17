@@ -95,7 +95,11 @@ std::string get_piece_char(libchess::Piece piece) noexcept {
 
 
 // recursive function till tt_entry contains pv move.
-void print_pv_line(libchess::Position &pos, const TT &tt) {
+void print_pv_line(libchess::Position &pos, const TT &tt, std::unordered_set<std::uint64_t> hashes) {
+    if (hashes.find(pos.hash()) != hashes.end()) {
+        return;
+    }
+    hashes.insert(pos.hash());
     if (pos.is_terminal())
         return;
     auto entry = tt.get(pos.hash());
@@ -104,4 +108,11 @@ void print_pv_line(libchess::Position &pos, const TT &tt) {
     std::cout << get_san(pos, entry->mv) << " ";
     print_pv_line(pos, tt);
     pos.undomove();
+}
+
+bool is_check(libchess::Position &pos, libchess::Move move) noexcept {
+    pos.makemove(move);
+    bool in_check = pos.in_check();
+    pos.undomove();
+    return in_check;
 }
