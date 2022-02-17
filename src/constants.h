@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-typedef std::int8_t Color;
+typedef int Color;
 const Color COLOR_WHITE = 1;
 const Color COLOR_BLACK = -1;
 
@@ -15,7 +15,7 @@ const int INF = 1000000000;
 
 // TODO: look up better values, right now piece values are high to discourage sacrifice for positional advantage.
 const int PAWN_VALUE = 100;
-const int KNIGHT_VALUE = 325;
+const int KNIGHT_VALUE = 350;
 const int BISHOP_VALUE = 350;
 const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
@@ -78,6 +78,7 @@ inline int get_index(const int &index, const int &color) noexcept {
         return (7 - index / 8) * 8 + index % 8;
 
     assert(false);
+    return 0;
 }
 
 

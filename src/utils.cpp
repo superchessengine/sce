@@ -29,7 +29,7 @@ std::string get_board_pretty(const std::string &fen) noexcept {
     std::string board;
     for (char i: fen) {
         if (i == '/') board += '\n';
-        if (i >= '1' && i <= '9') {
+        else if (i >= '1' && i <= '9') {
             for (int j = 0; j < i - '0'; j++) {
                 board += '.';
             }
@@ -96,6 +96,8 @@ std::string get_piece_char(libchess::Piece piece) noexcept {
 
 // recursive function till tt_entry contains pv move.
 void print_pv_line(libchess::Position &pos, const TT &tt) {
+    if (pos.is_terminal())
+        return;
     auto entry = tt.get(pos.hash());
     if (!entry->pv) return;
     pos.makemove(entry->mv);

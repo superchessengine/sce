@@ -6,39 +6,63 @@
 #include "utils.h"
 #include "Engine.h"
 
-const int TTSize = 10;
-const int DEPTH = 6;
+int TTSize = 100;
+int depth = 7;
+bool iterative_deepening = true;
+bool sort_moves = true;
+std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc >= 2) {
+        depth = atoi(argv[1]);
+    }
+
+    if (argc >= 3) {
+        TTSize = atoi(argv[2]);
+    }
+
+    if (argc >= 4) {
+        iterative_deepening = atoi(argv[3]);
+    }
+
+    if (argc >= 5) {
+        sort_moves = atoi(argv[4]);
+    }
+
+    if (argc >= 6) {
+        fen = argv[5];
+    }
+
+
     std::cout << sizeof(TTEntry) << std::endl;
 
     TT tt(TTSize);
     Engine engine(tt);
-    engine.iterative_deepening = true;
-    engine.sort_moves = true;
+
+    engine.sort_moves = sort_moves;
+    engine.iterative_deepening = iterative_deepening;
 
     libchess::Position position;
-    position.set_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    position.set_fen(fen);
 
     std::cout << "FEN: " << position.get_fen() << std::endl;
 
-    std::cout << "depth: " << DEPTH << " with sorting: " << engine.sort_moves << std::endl;
+    std::cout << "depth: " << depth << " with sorting: " << engine.sort_moves << std::endl;
 
     std::vector<std::string> game;
-    int cnt = 0;
     while (!position.is_terminal() && !position.threefold()) {
         std::cout << std::endl;
-        const auto moves = engine.get_moves(position, DEPTH,
+        const auto moves = engine.get_moves(position, depth,
                                             position.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK);
 
-//        for (const auto &move: moves) {
-//            std::cout << move.first << ":" << move.second << std::endl;
-//        }
         const auto max = std::max_element(moves.begin(), moves.end(),
                                           [](const auto &lhs, const auto &rhs) {
                                               return lhs.second < rhs.second;
                                           });
 
+//        print_pv_line(position, tt);
+
+        std::cout << std::endl;
 
         position.makemove(max->first);
         std::cout << "MAX: " << get_san(position, max->first) << ":" << max->second << " Searched: "
@@ -48,14 +72,12 @@ int main() {
                   << engine.static_eval_time / 1000. << "s makemove_time" << engine.makemove_time
                   << "s Threefold_time: " << engine.threefold_time << "s ttHits: " << engine.ttHits << std::endl;
 
-        print_pv_line(position, tt);
         game.emplace_back(get_san(position, max->first));
     }
-
+    std::cout << std::endl;
     for (const auto &move: game) {
         std::cout << move << " ";
     }
     std::cout << std::endl;
-//    position.history();
     return 0;
 }

@@ -52,6 +52,12 @@ public:
         const auto idx = index(entry.hash);
         _filled += _entries[idx].hash == 0 ? 1 : 0;
 
+        if (_entries[idx].hash == 0) {
+            _entries[idx] = entry;
+            return;
+        }
+
+
         if (_entries[idx].type == EXACT && entry.type != EXACT) {
             return;
         }
@@ -61,7 +67,7 @@ public:
             return;
         }
 
-        if (_entries[idx].depth >= entry.depth) {
+        if (_entries[idx].depth > entry.depth) {
             return;
         }
 
