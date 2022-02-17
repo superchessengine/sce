@@ -6,8 +6,8 @@
 #include "utils.h"
 #include "Engine.h"
 
-int TTSize = 100;
-int depth = 7;
+int TTSize = 300;
+int depth = 10;
 bool iterative_deepening = true;
 bool sort_moves = true;
 std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
     TT tt(TTSize);
     Engine engine(tt);
-
+    engine.clear_tt_every_move = true;
     engine.sort_moves = sort_moves;
     engine.iterative_deepening = iterative_deepening;
 
@@ -49,8 +49,19 @@ int main(int argc, char *argv[]) {
 
     std::cout << "depth: " << depth << " with sorting: " << engine.sort_moves << std::endl;
 
-    std::vector<std::string> game;
+    std::string game = "";
+    int cnt = 0;
     while (!position.is_terminal() && !position.threefold()) {
+//        if (cnt % 2 == 1) {
+//            std::cout << "Enter the move: " << std::endl;
+//            std::string mv;
+//            std::cin >> mv;
+//            position.makemove(mv);
+//            game += mv + " ";
+//            cnt++;
+//            continue;
+//
+//        }
         std::cout << std::endl;
         const auto moves = engine.get_moves(position, depth,
                                             position.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK);
@@ -60,7 +71,6 @@ int main(int argc, char *argv[]) {
                                               return lhs.second < rhs.second;
                                           });
 
-//        print_pv_line(position, tt);
 
         std::cout << std::endl;
 
@@ -72,7 +82,9 @@ int main(int argc, char *argv[]) {
                   << engine.static_eval_time / 1000. << "s makemove_time" << engine.makemove_time
                   << "s Threefold_time: " << engine.threefold_time << "s ttHits: " << engine.ttHits << std::endl;
 
-        game.emplace_back(get_san(position, max->first));
+        game += get_san(position, max->first) + " ";
+        std::cout << "Game: " << game << std::endl;
+        cnt++;
     }
     std::cout << std::endl;
     for (const auto &move: game) {

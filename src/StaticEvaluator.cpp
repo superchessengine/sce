@@ -14,9 +14,9 @@ int StaticEvaluator::evaluate(const libchess::Position &position) noexcept {
 //    std::cout << get_board_pretty(position.get_fen()) << std::endl << std::endl;
     if (position.is_checkmate()) {
         if (color == COLOR_WHITE) {
-            return -9999999;
+            return -IMMEDIATE_MATE_SCORE;
         } else {
-            return 9999999;
+            return IMMEDIATE_MATE_SCORE;
         }
     }
 
