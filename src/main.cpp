@@ -5,6 +5,8 @@
 #include "position.hpp"
 #include "utils.h"
 #include "Engine.h"
+#include <cstdlib>
+#include <ctime>
 
 int TTSize = 300;
 int depth = 10;
@@ -13,6 +15,8 @@ bool sort_moves = true;
 std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 int main(int argc, char *argv[]) {
+    srand(time(nullptr));
+
     if (argc >= 2) {
         depth = atoi(argv[1]);
     }
@@ -38,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     TT tt(TTSize);
     Engine engine(tt);
-    engine.clear_tt_every_move = true;
+    engine.clear_tt_every_move = false;
     engine.sort_moves = sort_moves;
     engine.iterative_deepening = iterative_deepening;
 
@@ -73,7 +77,8 @@ int main(int argc, char *argv[]) {
 
 
         std::cout << std::endl;
-
+        std::cout << get_board_pretty(position.get_fen()) << std::endl;
+        std::cout << max->first << " " << max->second << std::endl;
         position.makemove(max->first);
         std::cout << "MAX: " << get_san(position, max->first) << ":" << max->second << " Searched: "
                   << engine.nodes_searched << std::endl

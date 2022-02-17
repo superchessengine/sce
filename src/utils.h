@@ -13,6 +13,6 @@ std::string get_san(const libchess::Position &pos, const libchess::Move &move) n
 
 std::string get_piece_char(libchess::Piece piece) noexcept;
 
-void print_pv_line(libchess::Position &pos, const TT &tt, std::unordered_set<std::uint64_t> hashes = {});
+void print_pv_line(libchess::Position &pos, const TT &tt, std::unordered_set<std::uint64_t> hashes = {}, int depth = 0);
 
 bool is_check(libchess::Position &pos, libchess::Move move) noexcept;

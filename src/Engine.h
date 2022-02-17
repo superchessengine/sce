@@ -24,9 +24,9 @@ public:
 
 
     std::vector<std::pair<libchess::Move, int>>
-    get_moves(libchess::Position &pos, int depth, Color color) noexcept;
+    get_moves(libchess::Position pos, int depth, Color color) noexcept;
 
-    int negamax(libchess::Position &pos, int depth, int alpha, int beta, Color color) noexcept;
+    int negamax(libchess::Position pos, int depth, int alpha, int beta, Color color, bool helper = false) noexcept;
 
     long long nodes_searched = 0;
     long long search_time = 0;
@@ -39,15 +39,17 @@ public:
     int ttHits = 0;
     bool iterative_deepening = true;
     bool clear_tt_every_move = false;
+    bool terminate_helpers = false;
 
     void
-    set_scores(libchess::Position pos, std::vector<std::pair<libchess::Move, int>> &moves, Color color) const noexcept;
+    set_scores(libchess::Position pos, std::vector<std::pair<libchess::Move, int>> &moves, Color color,
+               bool helper) const noexcept;
 
     static int getMVVLVA(const libchess::Move &move);
 
     void sortNextMove(int index, std::vector<std::pair<libchess::Move, int>> &moves) const noexcept;
 
-    int QuiescenceSearch(libchess::Position &pos, int alpha, int beta, Color color) noexcept;
+    int QuiescenceSearch(libchess::Position pos, int alpha, int beta, Color color, bool helper = false) noexcept;
 };
 
 
