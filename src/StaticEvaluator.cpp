@@ -11,9 +11,9 @@ int StaticEvaluator::evaluate(const libchess::Position &position) noexcept {
     int score = 0;
 
     const int color = position.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK;
-
+//    std::cout << get_board_pretty(position.get_fen()) << std::endl << std::endl;
     if (position.is_checkmate()) {
-        if (color == 1) {
+        if (color == COLOR_WHITE) {
             return -9999999;
         } else {
             return 9999999;
@@ -26,9 +26,9 @@ int StaticEvaluator::evaluate(const libchess::Position &position) noexcept {
 
 
     // TODO: Check how is it affecting performance.
-    if (position.threefold()) {
-        return 0;
-    }
+//    if (position.threefold()) {
+//        return 0;
+//    }
 
     // TODO: Check performance, can it be more optimized?
     std::string board = get_board(position.get_fen());

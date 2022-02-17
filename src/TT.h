@@ -8,17 +8,20 @@
 #include <cstdint>
 #include <cstring>
 #include "constants.h"
+#include "move.hpp"
 
 enum TTEntryType {
     EXACT = 0, LOWER_BOUND = 1, UPPER_BOUND = 2
 };
 
 struct TTEntry {
-    std::uint64_t hash;
+    std::uint64_t hash{};
     TTEntryType type;
-    std::int8_t depth;
-    int eval;
-    Color color;
+    std::int8_t depth{};
+    int eval{};
+    Color color{};
+    bool pv{};
+    libchess::Move mv;
 };
 
 class TT {
@@ -41,16 +44,33 @@ public:
         delete _entries;
     }
 
-    [[nodiscard]] TTEntry *get(std::uint64_t hash) {
+    [[nodiscard]] TTEntry *get(std::uint64_t hash) const noexcept {
         return &_entries[index(hash)];
     }
 
     void add(const TTEntry &entry) {
         const auto idx = index(entry.hash);
         _filled += _entries[idx].hash == 0 ? 1 : 0;
-        if (_entries->hash == entry.hash && _entries->depth >= entry.depth) {
+
+        if (_entries[idx].hash == 0) {
+            _entries[idx] = entry;
             return;
         }
+
+
+        if (_entries[idx].type == EXACT && entry.type != EXACT) {
+            return;
+        }
+
+        if (_entries[idx].type != EXACT && entry.type == EXACT) {
+            _entries[idx] = entry;
+            return;
+        }
+
+        if (_entries[idx].depth > entry.depth) {
+            return;
+        }
+
         _entries[idx] = entry;
     }
 
