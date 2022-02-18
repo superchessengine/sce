@@ -5,13 +5,15 @@
 #include "position.hpp"
 #include "utils.h"
 #include "Engine.h"
+#include "SearchThread.h"
 #include <cstdlib>
 #include <ctime>
 
-int TTSize = 300;
-int depth = 10;
+int TTSize = 500;
+int depth = 18;
 bool iterative_deepening = true;
 bool sort_moves = true;
+
 std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 int main(int argc, char *argv[]) {
@@ -26,14 +28,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc >= 4) {
-        iterative_deepening = atoi(argv[3]);
-    }
-
-    if (argc >= 5) {
-        sort_moves = atoi(argv[4]);
-    }
-
-    if (argc >= 6) {
         fen = argv[5];
     }
 
@@ -42,38 +36,40 @@ int main(int argc, char *argv[]) {
 
     TT tt(TTSize);
     Engine engine(tt);
-    engine.clear_tt_every_move = false;
-    engine.sort_moves = sort_moves;
-    engine.iterative_deepening = iterative_deepening;
 
+    SearchInfo info;
+    info.iterative_deepening = iterative_deepening;
+    info.sort_moves = sort_moves;
+    info.clear_tt_every_move = false;
+
+    info.num_helper_threads = 2;
     libchess::Position position;
     position.set_fen(fen);
 
     std::cout << "FEN: " << position.get_fen() << std::endl;
 
-    std::cout << "depth: " << depth << " with sorting: " << engine.sort_moves << std::endl;
+    std::cout << "depth: " << depth << " with sorting: " << info.sort_moves << std::endl;
 
     std::string game = "";
     int cnt = 0;
     while (!position.is_terminal() && !position.threefold()) {
-//        if (cnt % 2 == 1) {
-//            std::cout << "Enter the move: " << std::endl;
-//            std::string mv;
-//            std::cin >> mv;
-//            position.makemove(mv);
-//            game += mv + " ";
-//            cnt++;
-//            continue;
-//
-//        }
+        if (cnt % 2 == 1) {
+            std::cout << "Enter the move: " << std::endl;
+            std::string mv;
+            std::cin >> mv;
+            position.makemove(mv);
+            game += mv + " ";
+            cnt++;
+            continue;
+        }
         std::cout << std::endl;
         const auto moves = engine.get_moves(position, depth,
-                                            position.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK);
+                                            position.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK,
+                                            &info);
 
-        const auto max = std::max_element(moves.begin(), moves.end(),
-                                          [](const auto &lhs, const auto &rhs) {
-                                              return lhs.second < rhs.second;
-                                          });
+        const auto max = std::max_element(moves.begin(), moves.end(), [](const auto &lhs, const auto &rhs) {
+            return lhs.second < rhs.second;
+        });
 
 
         std::cout << std::endl;
@@ -81,11 +77,10 @@ int main(int argc, char *argv[]) {
         std::cout << max->first << " " << max->second << std::endl;
         position.makemove(max->first);
         std::cout << "MAX: " << get_san(position, max->first) << ":" << max->second << " Searched: "
-                  << engine.nodes_searched << std::endl
-                  << "search time: " << engine.search_time / 1000. << "s sort time: " << engine.sort_time / 1000.
-                  << "s Movegen time:" << engine.move_gen_time / 1000. << "s static_eval_time: "
-                  << engine.static_eval_time / 1000. << "s makemove_time" << engine.makemove_time
-                  << "s Threefold_time: " << engine.threefold_time << "s ttHits: " << engine.ttHits << std::endl;
+                  << info.nodes_searched << std::endl << "search time: " << info.search_time / 1000. << "s sort time: "
+                  << info.sort_time / 1000. << "s Movegen time:" << info.move_gen_time / 1000. << "s static_eval_time: "
+                  << info.static_eval_time / 1000. << "s makemove_time" << info.makemove_time << "s Threefold_time: "
+                  << info.threefold_time << "s ttHits: " << info.ttHits << std::endl;
 
         game += get_san(position, max->first) + " ";
         std::cout << "Game: " << game << std::endl;

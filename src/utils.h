@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_set>
 #include "TT.h"
+#include "SearchInfo.h"
 
 std::string get_board(const std::string &fen) noexcept;
 
@@ -16,3 +17,5 @@ std::string get_piece_char(libchess::Piece piece) noexcept;
 void print_pv_line(libchess::Position &pos, const TT &tt, std::unordered_set<std::uint64_t> hashes = {}, int depth = 0);
 
 bool is_check(libchess::Position &pos, libchess::Move move) noexcept;
+
+void print_search_info(SearchInfo *info) noexcept;
