@@ -13,10 +13,11 @@ const Color COLOR_BLACK = -1;
 
 const int INF = 1000000000;
 const int IMMEDIATE_MATE_SCORE = 9999999;
+const int VAL_WINDOW = 50;
 
 // TODO: look up better values, right now piece values are high to discourage sacrifice for positional advantage.
 const int PAWN_VALUE = 100;
-const int KNIGHT_VALUE = 350;
+const int KNIGHT_VALUE = 325;
 const int BISHOP_VALUE = 350;
 const int ROOK_VALUE = 500;
 const int QUEEN_VALUE = 900;
