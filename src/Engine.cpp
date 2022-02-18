@@ -26,7 +26,7 @@ int Engine::negamax(libchess::Position pos, int depth, int alpha, int beta, Colo
     int score = -INF;
 
     // TODO: check perfomance with and without prefetch.
-    // _tt.prefetch(pos.hash());
+//     _tt.prefetch(pos.hash());
 
     info->nodes_searched++;
 
@@ -59,12 +59,13 @@ int Engine::negamax(libchess::Position pos, int depth, int alpha, int beta, Colo
 
 
     auto ttEntry = _tt.get(pos.hash());
-    if (ttEntry->hash == pos.hash()) {
+    if (ttEntry->hash == pos.hash() && ttEntry->depth >= depth) {
         info->ttHits++;
         int scr = ttEntry->eval * (ttEntry->color == color ? 1 : -1);
-        if (ttEntry->type == TTEntryType::EXACT && ttEntry->depth >= depth)
-            return scr;
-        else if (ttEntry->type == TTEntryType::UPPER_BOUND)
+        if (ttEntry->type == TTEntryType::EXACT) {
+            if (ttEntry->depth >= depth)
+                return scr;
+        } else if (ttEntry->type == TTEntryType::UPPER_BOUND)
             beta = std::min(beta, scr);
         else if (ttEntry->type == TTEntryType::LOWER_BOUND)
             alpha = std::max(alpha, scr);
@@ -243,37 +244,43 @@ Engine::get_moves(libchess::Position pos, int depth, Color color, SearchInfo *in
         int alpha = -INF;
         int beta = INF;
 
+        std::vector<libchess::Move> _ = pos.legal_moves();
+
+        for (int k = 0; k < info->num_helper_threads; k++) {
+            auto *helperInfo = new SearchInfo();
+            helperInfo->helper_thread = true;
+            helperInfo->terminate_helpers = false;
+            helperInfo->is_root = true;
+            helperInfo->sort_moves = true;
+            helperInfo->nodes_searched = 0;
+            if (_.size() >= 8) {
+                helperInfo->restrict_root_moves = true;
+                // restrict overlapping moves.
+                helperInfo->restrict_root_moves_size = (_.size() / info->num_helper_threads) + 1;
+                for (int j = 0; j < helperInfo->restrict_root_moves_size; j++) {
+                    helperInfo->restrict_root_moves_ar[j] = _[rand() % _.size()];
+                }
+            }
+            _threads[k]->setSearchInfo(helperInfo);
+            _threads[k]->setRootPos(pos);
+        }
 
         for (int i = 1; i <= depth;) {
             moves.clear();
             info->search_depth = i;
 
-            std::vector<libchess::Move> _ = pos.legal_moves();
 
             std::cout << "Starting threads.. " << std::endl;
             for (int k = 0; k < info->num_helper_threads; k++) {
-                auto *helperInfo = new SearchInfo();
-                helperInfo->helper_thread = true;
-                helperInfo->terminate_helpers = false;
-                helperInfo->is_root = true;
-                helperInfo->search_depth = i;
-                helperInfo->sort_moves = true;
-                helperInfo->nodes_searched = 0;
-                if (_.size() >= 8) {
-                    helperInfo->restrict_root_moves = true;
-                    // restrict overlapping moves.
-                    helperInfo->restrict_root_moves_size = (_.size() / info->num_helper_threads) + 1;
-                    for (int j = 0; j < helperInfo->restrict_root_moves_size; j++) {
-                        helperInfo->restrict_root_moves_ar[j] = _[rand() % _.size()];
-                    }
-                }
-                _threads[k]->setSearchInfo(helperInfo);
-                _threads[k]->setRootPos(pos);
+                _threads[k]->setDepth(k);
+                _threads[k]->getSearchInfo()->search_depth = i;
+                _threads[k]->getSearchInfo()->terminate_helpers = false;
+                _threads[k]->getSearchInfo()->is_root = true;
                 _threads[k]->start_searching(alpha, beta);
             }
 
             info->helper_thread = false;
-//            std::cout << "Depth: " << i << std::endl;
+            // std::cout << "Depth: " << i << std::endl;
             int val = negamax(pos, i, alpha, beta, color, info);
 
             std::cout << "Waiting for threads to finish..." << std::endl;
@@ -309,17 +316,19 @@ void Engine::set_scores(libchess::Position pos, std::vector<std::pair<libchess::
     auto entry = _tt.get(pos.hash());
 
     for (auto &move: mvs) {
-//        if (helper) {
+        if (helper) {
 //             TODO: Random + TT
-//            move.second = rand() % 20000;
-//        } else {
+            move.second = rand() % 20000;
+        } else {
             move.second = 0;
-//        }
+        }
         if (entry->hash == pos.hash()) {
             if (entry->mv != libchess::Move() && move.first == entry->mv)
                 move.second += 200000;
         }
-
+        if (entry->pv) {
+            move.second += 10000;
+        }
         // add MVV/LVA score
         move.second += getMVVLVA(move.first);
 
@@ -338,6 +347,9 @@ void Engine::set_scores(libchess::Position pos, std::vector<std::pair<libchess::
             move.second += -10000;
         } else if (_tempEntry->type == TTEntryType::UPPER_BOUND) {
             move.second -= 5000;
+        }
+        if (_tempEntry->pv) {
+            move.second += 10000;
         }
         // previous evaluation helps alot.
         move.second += (_tempEntry->eval * (color == _tempEntry->color ? 1 : -1));
