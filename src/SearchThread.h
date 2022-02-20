@@ -30,7 +30,6 @@ private:
 
     std::mutex mutex;
     std::condition_variable cv;
-    size_t idx;
     bool exit = false, searching = true;
 public:
     SearchThread(Engine *engine) {
@@ -116,13 +115,13 @@ public:
     }
 
     void search() {
-        std::cout << "Thread " << _threadId << " started searching with depth: " << _searchInfo->search_depth
-                  << std::endl;
+//        std::cout << "Thread " << _threadId << " started searching with depth: " << _searchInfo->search_depth
+//                  << std::endl;
 //        print_search_info(_searchInfo);
         _engine->negamax(_rootPos, _searchInfo->search_depth, alpha, beta,
                          _rootPos.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK, _searchInfo);
 //        print_search_info(_searchInfo);
-        std::cout << "Thread " << _threadId << " finished searching " << _searchInfo->nodes_searched << std::endl;
+//        std::cout << "Thread " << _threadId << " finished searching " << _searchInfo->nodes_searched << std::endl;
     }
 
     void wait_for_search_to_finish() {

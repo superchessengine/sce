@@ -29,13 +29,14 @@ public:
 
     void
     set_scores(libchess::Position pos, std::vector<std::pair<libchess::Move, int>> &moves, Color color,
-               bool helper) const noexcept;
+               SearchInfo *info) const noexcept;
 
     static int getMVVLVA(const libchess::Move &move);
 
     void sortNextMove(int index, std::vector<std::pair<libchess::Move, int>> &moves) const noexcept;
 
     int QuiescenceSearch(libchess::Position pos, int alpha, int beta, Color color, SearchInfo *info) noexcept;
+
 };
 
 #endif //SCE_ENGINE_H
