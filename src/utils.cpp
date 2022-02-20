@@ -113,10 +113,8 @@ void print_pv_line(libchess::Position &pos, const TT &tt, std::unordered_set<std
     if (!entry->pv) return;
 
     pos.makemove(entry->mv);
-
-    std::cout << get_san(pos, entry->mv) << " ";
+    std::cout << entry->mv << " ";
     print_pv_line(pos, tt, hashes, depth + 1);
-
     pos.undomove();
 }
 

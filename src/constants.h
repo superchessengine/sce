@@ -15,6 +15,8 @@ const int INF = 1000000000;
 const int IMMEDIATE_MATE_SCORE = 9999999;
 const int VAL_WINDOW = 50;
 
+const int VAL_KILLER_0 = 6000;
+const int VAL_KILLER_1 = 5000;
 // TODO: look up better values, right now piece values are high to discourage sacrifice for positional advantage.
 const int PAWN_VALUE = 100;
 const int KNIGHT_VALUE = 325;
