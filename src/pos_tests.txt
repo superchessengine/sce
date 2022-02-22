@@ -1,5 +1,0 @@
-r3k2r/2p1b1pp/p7/1p1pn3/3B4/5P1P/PPP2P2/1R2KB1R b kq - 1 19
-r1bqr1k1/p1p2ppp/2p1p3/3p4/P2Pn3/B1P1P3/2P1BPPP/RQ3RK1 w - - 9 16
-r5k1/p1p3pp/2p1pp2/2Bp4/3P4/4P3/2P1bPPP/1Q4K1 b - - 1 29
-r3k2r/2p1b1pp/p7/1p1pn3/3B4/5P1P/PPP1KP2/1R3B1R b kq - 1 19
-8/8/k1B5/4B3/8/8/1P6/6K1 w - - 41 83 // more depth.
