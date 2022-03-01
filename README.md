@@ -2,16 +2,23 @@
 
 ### Installation
 
-- Install and make `libchess` library.
+- Build `libchess` library.
 
 ```
-git clone https://github.com/superchessengine/libchess.git
-cd libchess
+cd libs/libchess
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release  ..
 make
 ```
 
-- Now copy `libchess/build/static/libchess.a` to `src/libs/libchess` and `libchess/src/libchess/*.hpp` to `sce/libs/libchess`.
- 
+- Now build `SuperChessEngine`, go back to root dir of the repository.
+
+```
+mkdir build
+cd build
+cmake  -DCMAKE_BUILD_TYPE=Release ..
+make
+```
+
+- `SuperChessEngine` executable will be created in the build directory.
