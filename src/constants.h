@@ -13,7 +13,7 @@ typedef int Color;
 const std::uint16_t VAL_STATIC_EVAL = 10;
 const std::uint16_t MAX_TT_SIZE = 256;
 const std::uint16_t MAX_DEPTH = 20;
-const std::uint8_t MAX_THREADS = 2;
+const std::uint8_t MAX_THREADS = 1;
 
 const Color COLOR_WHITE = 1;
 const Color COLOR_BLACK = -1;

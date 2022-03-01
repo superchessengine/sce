@@ -70,10 +70,10 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
   if (ttEntry->hash == pos.hash() && ttEntry->depth >= depth && !info->is_root) {
 	info->ttHits++;
 	int scr = ttEntry->eval;
-	if (score > IMMEDIATE_MATE_SCORE) {
-	  score -= info->ply;
-	} else if (score < -IMMEDIATE_MATE_SCORE) {
-	  score += info->ply;
+	if (scr >= IMMEDIATE_MATE_SCORE) {
+	  scr -= info->ply;
+	} else if (scr <= -IMMEDIATE_MATE_SCORE) {
+	  scr += info->ply;
 	}
 	if (ttEntry->type == TTEntryType::EXACT) {
 	  return scr;
@@ -356,7 +356,7 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 			  << (nodes_searched * 1000 / (search_time + 1))
 			  << " cutoff " << cutoffs
 			  << " null " << null_cutoffs
-			  << "ordering " << (info->fhf / (float)(info->fh + 1)) * 100
+			  << " ordering " << (info->fhf / (float)(info->fh + 1)) * 100
 			  << " pv ";
 	print_pv_line(pos, _tt);
 	std::cout << std::endl;

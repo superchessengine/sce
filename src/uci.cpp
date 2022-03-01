@@ -64,12 +64,13 @@ void UCI::go() {
   auto *info = new SearchInfo();
   std::cout << _curFen << std::endl;
   libchess::Position pos(_curFen);
-  std::cout << get_board_pretty(pos.get_fen()) << std::endl << pos.turn();
+  std::cout << get_board_pretty(pos.get_fen()) << std::endl << pos.turn() << std::endl;
 
   long long wtime = 20000 * 20; // 400s is the time by default (20s to move)
   long long btime = 20000 * 20; // 400s is the time by default (20s to move).
   int movestogo = 20;
-  // get wtime and btime
+
+
   std::string token;
   while (ss >> token) {
 	if (token == "wtime") {

@@ -1,0 +1,3 @@
+[submodule "libs/libchess"]
+	path = libs/libchess
+	url = https://github.com/superchessengine/libchess.git
