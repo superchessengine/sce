@@ -36,7 +36,7 @@ void UCI::runLoop() {
 	  std::cout << "id author " << "SCE Team" << std::endl;
 	  std::cout << "uciok" << std::endl;
 	} else {
-	  std::cout << "Unknown command" << std::endl;
+	//   std::cout << "Unknown command" << std::endl;
 	}
   }
 }
