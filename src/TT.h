@@ -58,6 +58,10 @@ class TT {
 	  return;
 	}
 
+	if(_entries[idx].pv && !entry.pv) {
+	  return;
+	}
+
 	if (_entries[idx].type == EXACT && entry.type != EXACT) {
 	  return;
 	}

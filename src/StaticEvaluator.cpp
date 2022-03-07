@@ -6,13 +6,13 @@
 #include "StaticEvaluator.h"
 #include "utils.h"
 #include "constants.h"
+//#include "../StaticEvaluatorNN.h"
 
 namespace sce {
-int StaticEvaluator::evaluate(const libchess::Position position) noexcept {
-  int score = 0;
+int StaticEvaluator::evaluate(const libchess::Position& position) noexcept {
 
   const int color = position.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK;
-//    std::cout << get_board_pretty(position.get_fen()) << std::endl << std::endl;
+ // std::cout << get_board_pretty(position.get_fen()) << std::endl << std::endl;
 
   if (position.is_checkmate()) {
 	if (color == COLOR_WHITE) {
@@ -30,6 +30,9 @@ int StaticEvaluator::evaluate(const libchess::Position position) noexcept {
 	return 0;
   }
 
+//   return StaticEvaluatorNN::evaluateBoard(position);
+
+  int score = 0;
   // TODO: Check performance, can it be more optimized?
   std::string board = get_board(position.get_fen());
 
@@ -51,9 +54,9 @@ int StaticEvaluator::evaluate(const libchess::Position position) noexcept {
 	} else if (board[i] == 'r') {
 	  score -= (ROOK_VALUE + ROOK_INC[get_index(i, COLOR_BLACK)]);
 	} else if (board[i] == 'Q') {
-	  score += (QUEEN_VALUE + QUEEN_INC[get_index(i, COLOR_WHITE)]);
+	  score += (QUEEN_VALUE /*+ QUEEN_INC[get_index(i, COLOR_WHITE)] */);
 	} else if (board[i] == 'q') {
-	  score -= (QUEEN_VALUE + QUEEN_INC[get_index(i, COLOR_BLACK)]);
+	  score -= (QUEEN_VALUE /*+ QUEEN_INC[get_index(i, COLOR_BLACK)] */);
 	} else if (board[i] == 'K') {
 	  score += (KING_VALUE + KING_INC[get_index(i, COLOR_WHITE)]);
 	} else if (board[i] == 'k') {

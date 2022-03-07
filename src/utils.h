@@ -7,6 +7,8 @@
 #include "SearchInfo.h"
 #include "position.hpp"
 
+#ifndef SCE_UTILS_H
+#define SCE_UTILS_H
 namespace sce {
 std::string get_board(const std::string &fen) noexcept;
 
@@ -21,4 +23,10 @@ void print_pv_line(libchess::Position pos, const TT *tt, std::unordered_set<std:
 bool is_check(libchess::Position &pos, libchess::Move move) noexcept;
 
 void print_search_info(SearchInfo *info) noexcept;
+
+bool is_endgame(libchess::Position &pos) noexcept;
 }
+
+
+
+#endif

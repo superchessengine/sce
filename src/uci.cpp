@@ -20,6 +20,7 @@ void UCI::runLoop() {
 	std::string line;
 	getline(std::cin, line);
 	ss.clear();
+	std::cout << "debug: " << line << std::endl;
 	ss.str(line);
 	std::string token;
 	ss >> token;
@@ -62,13 +63,13 @@ void UCI::getPosition() {
 
 void UCI::go() {
   auto *info = new SearchInfo();
-  std::cout << _curFen << std::endl;
+//   std::cout << _curFen << std::endl;
   libchess::Position pos(_curFen);
-  std::cout << get_board_pretty(pos.get_fen()) << std::endl << pos.turn() << std::endl;
+//   std::cout << get_board_pretty(pos.get_fen()) << std::endl << pos.turn() << std::endl;
 
-  long long wtime = 20000 * 20; // 400s is the time by default (20s to move)
-  long long btime = 20000 * 20; // 400s is the time by default (20s to move).
-  int movestogo = 20;
+  long long wtime = INTMAX_MAX; // 400s is the time by default (20s to move)
+  long long btime = INTMAX_MAX; // 400s is the time by default (20s to move).
+  int movestogo = 30;
 
 
   std::string token;
@@ -79,6 +80,9 @@ void UCI::go() {
 	  ss >> btime;
 	} else if (token == "movestogo") {
 	  ss >> movestogo;
+	} else if (token == "movetime") {
+	  ss >> wtime;
+	  btime = wtime;
 	}
   }
 
