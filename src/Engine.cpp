@@ -31,8 +31,10 @@ namespace sce
 		{
 			return 0;
 		}
+
 		if (info->quit_search)
 			return 0;
+		
 		int score = -INF;
 
 		// TODO: check performance with and without prefetch.
@@ -76,8 +78,8 @@ namespace sce
 
 		if (depth <= 0)
 		{
-			// return color * StaticEvaluator::evaluate(pos);
-			return QuiescenceSearch(pos, alpha, beta, color, info);
+			return color * StaticEvaluator::evaluate(pos);
+			// return QuiescenceSearch(pos, alpha, beta, color, info);
 		}
 
 		auto ttEntry = _tt->get(pos.hash());
@@ -120,7 +122,7 @@ namespace sce
 			int scr = -negamax(pos, depth - 4, -beta, -beta + 1, -color, info);
 			pos.undonull();
 
-			if (scr >= beta && abs(scr) < IMMEDIATE_MATE_SCORE)
+			if (scr >= beta)
 			{
 				info->null_cutoffs++;
 				return beta;
@@ -149,7 +151,7 @@ namespace sce
 			info->null_move = true;
 			// if we are searching  with the score of bad captures.
 			// late move reductions
-			if (i >= 4 && !pos.in_check() && depth >= 5)
+			if (i >= 4 && depth >= 5 && !pos.in_check())
 			{
 				moveScore = -negamax(pos, depth - 2, -alpha - 1, -alpha, -color, info);
 				if (moveScore > alpha && moveScore < beta)
