@@ -18,7 +18,7 @@ IF(OLD_VALS)
     ADD_DEFINITIONS(-D OLD_VALS=1)
 ENDIF(OLD_VALS)
 
-OPTION(NEW_VALS "Option description" OFF) # Enabled by default
+OPTION(NEW_VALS "Option description" ON) # Enabled by default
 IF(NEW_VALS)
     ADD_DEFINITIONS(-D NEW_VALS=1)
 ENDIF(NEW_VALS)

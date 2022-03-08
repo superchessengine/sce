@@ -24,7 +24,7 @@ bool is_check(libchess::Position &pos, libchess::Move move) noexcept;
 
 void print_search_info(SearchInfo *info) noexcept;
 
-bool is_endgame(libchess::Position &pos) noexcept;
+bool is_endgame(const libchess::Position &pos) noexcept;
 }
 
 

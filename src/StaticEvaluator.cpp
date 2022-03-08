@@ -58,7 +58,7 @@ int StaticEvaluator::evaluate(const libchess::Position& position) noexcept {
 	} else if (board[i] == 'q') {
 	  score -= (QUEEN_VALUE /*+ QUEEN_INC[get_index(i, COLOR_BLACK)] */);
 	} else if (board[i] == 'K') {
-	  score += (KING_VALUE + KING_INC[get_index(i, COLOR_WHITE)]);
+	  score += (KING_VALUE + (is_endgame(position) ? KING_ENDGAME_INC[get_index(i, COLOR_WHITE)] : KING_INC[get_index(i, COLOR_WHITE)]);
 	} else if (board[i] == 'k') {
 	  score -= (KING_VALUE + KING_INC[get_index(i, COLOR_BLACK)]);
 	}

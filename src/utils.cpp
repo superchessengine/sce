@@ -178,7 +178,7 @@ namespace sce
     std::cout << "\t sort moves: " << info->sort_moves << std::endl;
   }
 
-  bool is_endgame(libchess::Position &pos) noexcept
+  bool is_endgame(const libchess::Position &pos) noexcept
   {
     std::string board = get_board(pos.get_fen());
     int score = 0;

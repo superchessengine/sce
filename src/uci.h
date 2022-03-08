@@ -15,7 +15,7 @@ class UCI {
   std::string _curFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   Engine *_engine;
   TT *tt;
-  libchess::Position _curPos;
+  libchess::Position _curPos = libchess::Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
   std::stringstream ss;
  public:
   void init();
