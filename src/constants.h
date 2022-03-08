@@ -14,7 +14,7 @@ namespace sce
 	const std::uint16_t VAL_STATIC_EVAL = 10;
 	const std::uint16_t MAX_TT_SIZE = 256;
 	const std::uint16_t MAX_DEPTH = 60;
-	const std::uint8_t MAX_THREADS = 1;
+	const std::uint8_t MAX_THREADS = 5;
 	const int ENDGAME_THRESHOLD = 100 * 21 + 200000;
 	const Color COLOR_WHITE = 1;
 	const Color COLOR_BLACK = -1;
