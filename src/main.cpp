@@ -1,11 +1,17 @@
+//#define USE_NN true // Use neural network
+
 #include <chrono>
 #include <iostream>
 #include "uci.h"
+#include "StaticEvaluatorNN.h"
 #include "StaticEvaluator.h"
+
 
 int main(int argc, char *argv[]) {
   srand(time(nullptr));
-
+#ifdef USE_NN
+  sce::StaticEvaluatorNN::init();
+#endif
   std::cout << "StartPos: " << sce::StaticEvaluator::evaluate(libchess::Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")) << std::endl;
   std::cout << "e2e4 " << sce::StaticEvaluator::evaluate(libchess::Position("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1")) << std::endl;
   std::cout << "d7d5 " << sce::StaticEvaluator::evaluate(libchess::Position("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2")) << std::endl;

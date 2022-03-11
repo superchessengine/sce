@@ -110,7 +110,9 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
   for (int i = 0; i < childMoves.size(); i++) {
 	sortNextMove(i, childMoves);
 	auto &move = childMoves[i];
-	if ((i >= 3 && move.second <= (4600 + 1000000) || i >= 5) && depth >= 7) break;
+	if (!is_endgame(pos) && ((i >= 3 && move.first.is_capturing() && move.second <= (4600 + 1000000) || i >= 6))
+		&& depth >= 7)
+	  break;
 
 	int moveScore = 0;
 	pos.makemove(move.first);
@@ -118,9 +120,8 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
 	info->null_move = true;
 	// if we are searching  with the score of bad captures.
 	// late move reductions
-	if (i >= 1 && depth >= 7 && !pos.in_check()) {
-
-	  moveScore = -negamax(pos, depth - 2, -beta, -alpha, -color, info);
+	if (i >= 2 && depth >= 7 && !pos.in_check() && !is_endgame(pos)) {
+	  moveScore = -negamax(pos, depth - 3, -beta, -alpha, -color, info);
 	  if (moveScore > alpha) {
 		moveScore = -negamax(pos, depth - 1, -beta, -alpha, -color, info);
 	  }
