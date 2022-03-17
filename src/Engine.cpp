@@ -8,6 +8,7 @@
 #include <numeric>
 #include "Engine.h"
 #include "StaticEvaluator.h"
+#include "StaticEvaluatorNN.h"
 #include "utils.h"
 #include "SearchInfo.h"
 #include "SearchThread.h"
@@ -21,7 +22,8 @@ Engine::Engine(TT *tt) {
   }
 }
 
-int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color color, SearchInfo *info) noexcept {
+int
+Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color color, SearchInfo *info) noexcept {
   info->ply = info->ply % 100;
   if (info->helper_thread && info->terminate_helpers) {
 	return 0;
@@ -36,7 +38,8 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
 
   if (!info->helper_thread && info->nodes_searched & 2047) {
 	std::chrono::milliseconds cur =
-		std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+		std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now().time_since_epoch());
 	if (cur > info->search_finish_time) {
 	  info->quit_search = true;
 	  return 0;
@@ -52,11 +55,17 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
   }
 
   if (pos.is_terminal()) {
-	return color * (StaticEvaluator::evaluate(pos) + info->ply);
+	return color * (StaticEvaluator::evaluate(pos, info) + info->ply);
   }
 
   if (depth <= 0) {
-	// return color * StaticEvaluator::evaluate(pos);
+#ifdef USE_NN
+	if (info->helper_thread) {
+	  return QuiescenceSearch(pos, alpha, beta, color, info);
+	} else {
+	  return color * StaticEvaluator::evaluate(pos, info);
+	}
+#endif
 	return QuiescenceSearch(pos, alpha, beta, color, info);
   }
 
@@ -106,22 +115,25 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
 
   info->is_root = false;
   libchess::Move bestMove;
-  TTEntry entry{pos.hash(), TTEntryType::EXACT, static_cast<int8_t>(depth), alpha, color, false, libchess::Move()};
+  TTEntry entry{pos.hash(), TTEntryType::EXACT, static_cast<int8_t>(depth), alpha, color, false,
+				libchess::Move()};
   for (int i = 0; i < childMoves.size(); i++) {
 	sortNextMove(i, childMoves);
 	auto &move = childMoves[i];
-	if (!is_endgame(pos) && ((i >= 3 && move.first.is_capturing() && move.second <= (4600 + 1000000) || i >= 6))
-		&& depth >= 7)
+	if (!is_endgame(pos) && depth >= 5
+		&& ((i >= 3 && move.first.is_capturing() && move.second <= (4600 + 1000000)) || i >= 6))
 	  break;
-
+	if (info->search_depth == depth && !info->helper_thread) {
+	  std::cout << move.first << std::endl;
+	}
 	int moveScore = 0;
 	pos.makemove(move.first);
 	info->ply++;
 	info->null_move = true;
 	// if we are searching  with the score of bad captures.
 	// late move reductions
-	if (i >= 2 && depth >= 7 && !pos.in_check() && !is_endgame(pos)) {
-	  moveScore = -negamax(pos, depth - 3, -beta, -alpha, -color, info);
+	if (i >= 2 && depth >= 5 && !pos.in_check() && !is_endgame(pos)) {
+	  moveScore = -negamax(pos, (int)(depth / 1.5f), -beta, -alpha, -color, info);
 	  if (moveScore > alpha) {
 		moveScore = -negamax(pos, depth - 1, -beta, -alpha, -color, info);
 	  }
@@ -132,7 +144,7 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
 	pos.undomove();
 
 	if (info->search_depth == depth) {
-	  moves.push_back({move.first, moveScore});
+	  moves.emplace_back(move.first, moveScore);
 	}
 
 	if (info->quit_search) {
@@ -149,7 +161,7 @@ int Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Col
 
 	if (moveScore > alpha) {
 	  if (!move.first.is_capturing())
-		info->history[pos.turn()][(int)move.first.piece()][(int)move.first.to()] += depth;
+		info->history[pos.turn()][(int)move.first.piece()][(int)move.first.to()] += depth * depth;
 	  alpha = moveScore;
 	  entry.eval = moveScore;
 	  entry.type = TTEntryType::EXACT;
@@ -195,11 +207,12 @@ int Engine::QuiescenceSearch(libchess::Position &pos, int alpha, int beta, Color
   if (info->helper_thread && info->terminate_helpers) {
 	return 0;
   }
-  int score = color * StaticEvaluator::evaluate(pos);
+  int score = color * StaticEvaluator::evaluate(pos, info);
 
   if (!info->helper_thread && info->nodes_searched & 2047) {
 	auto cur =
-		std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+		std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::high_resolution_clock::now().time_since_epoch());
 	if (cur > info->search_finish_time) {
 	  info->quit_search = true;
 	  return 0;
@@ -371,22 +384,18 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 			  << " cutoff " << cutoffs
 			  << " null " << null_cutoffs
 			  << " ordering " << (info->fhf / (float)(info->fh + 1)) * 100
+			  #ifdef USE_NN
+			  << " nn_hits " << StaticEvaluatorNN::hits
+			  #endif
 			  << " pv ";
 	print_pv_line(pos, _tt);
 	std::cout << std::endl;
 	if (info->quit_search) {
 	  return {{entry->mv, entry->eval}};
 	}
+	alpha = -INF;
+	beta = INF;
 
-	if ((val <= alpha) || (val >= beta)) {
-	  alpha = -INF;
-	  beta = INF;
-	  continue;
-	}
-	// alpha = -INF;
-	// beta = INF;
-	alpha = val - VAL_WINDOW;
-	beta = val + VAL_WINDOW;
 	i++;
   }
   auto d1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t1);

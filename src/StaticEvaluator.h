@@ -6,12 +6,13 @@
 #define SCE_STATICEVALUATOR_H
 
 #include "position.hpp"
+#include "SearchInfo.h"
 namespace sce {
 class StaticEvaluator {
  public:
-  static int evaluate(const libchess::Position& position) noexcept;
+  static int evaluate(const libchess::Position& position, SearchInfo *info) noexcept;
 
-  static int evaluateMove(libchess::Position position, const libchess::Move &move) noexcept;
+  static int evaluateMove(libchess::Position position, const libchess::Move &move, SearchInfo *info) noexcept;
 };
 }
 

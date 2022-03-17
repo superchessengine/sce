@@ -7,9 +7,10 @@
 #include "utils.h"
 #include "constants.h"
 #include "StaticEvaluatorNN.h"
+#include "SearchInfo.h"
 
 namespace sce {
-int StaticEvaluator::evaluate(const libchess::Position &position) noexcept {
+int StaticEvaluator::evaluate(const libchess::Position &position, SearchInfo *info) noexcept {
 
   const int color = position.turn() == libchess::Side::White ? COLOR_WHITE : COLOR_BLACK;
   // std::cout << get_board_pretty(position.get_fen()) << std::endl << std::endl;
@@ -29,10 +30,6 @@ int StaticEvaluator::evaluate(const libchess::Position &position) noexcept {
   if (position.threefold()) {
 	return 0;
   }
-  int score_nn = 0;
-  #ifdef USE_NN
-	score_nn = StaticEvaluatorNN::evaluateBoard(position);
-  #endif
 
   int score = 0;
   // TODO: Check performance, can it be more optimized?
@@ -56,27 +53,32 @@ int StaticEvaluator::evaluate(const libchess::Position &position) noexcept {
 	} else if (board[i] == 'r') {
 	  score -= (ROOK_VALUE + ROOK_INC[get_index(i, COLOR_BLACK)]);
 	} else if (board[i] == 'Q') {
-	  score += (QUEEN_VALUE /*+ QUEEN_INC[get_index(i, COLOR_WHITE)] */);
+	  score += (QUEEN_VALUE + QUEEN_INC[get_index(i, COLOR_WHITE)]);
 	} else if (board[i] == 'q') {
-	  score -= (QUEEN_VALUE /*+ QUEEN_INC[get_index(i, COLOR_BLACK)] */);
+	  score -= (QUEEN_VALUE + QUEEN_INC[get_index(i, COLOR_BLACK)]);
 	} else if (board[i] == 'K') {
 	  score += (KING_VALUE
-		  + (is_endgame(position) ? KING_ENDGAME_INC[get_index(i, COLOR_WHITE)] : KING_INC[get_index(i, COLOR_WHITE)]));
+		  + (is_endgame(position) ? KING_ENDGAME_INC[get_index(i, COLOR_WHITE)] : KING_INC[get_index(i,
+																									 COLOR_WHITE)]));
 	} else if (board[i] == 'k') {
 	  score -= (KING_VALUE
-		  + (is_endgame(position) ? KING_ENDGAME_INC[get_index(i, COLOR_BLACK)] : KING_INC[get_index(i, COLOR_BLACK)]));
+		  + (is_endgame(position) ? KING_ENDGAME_INC[get_index(i, COLOR_BLACK)] : KING_INC[get_index(i,
+																									 COLOR_BLACK)]));
 	}
   }
 #ifdef USE_NN
-  return score * 0.6 + score_nn * 0.4;
+//        if (abs(score) > 300) return score;
+  if (info->helper_thread) return score;
+  int score_nn = 0;
+  score_nn = StaticEvaluatorNN::evaluateBoard(position);
+  return score * 0.5 + score_nn * 0.5;
 #endif
   return score;
 }
 
-
-int StaticEvaluator::evaluateMove(libchess::Position position, const libchess::Move &move) noexcept {
+int StaticEvaluator::evaluateMove(libchess::Position position, const libchess::Move &move, SearchInfo *info) noexcept {
   position.makemove(move);
-  int score = evaluate(position);
+  int score = evaluate(position, info);
   position.undomove();
 
   return score;

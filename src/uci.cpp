@@ -51,6 +51,10 @@ namespace sce
 				std::cout << "id author "
 						  << "SCE Team" << std::endl;
 				std::cout << "uciok" << std::endl;
+			} else if (token == "ucinewgame") {
+				tt->clear();
+			} else if(token == "strength") {
+				ss >> strength;
 			}
 			else
 			{
@@ -117,7 +121,17 @@ namespace sce
 		}
 
 		// save the search start time for time management
-		info->search_depth = MAX_DEPTH;
+		if(strength == 3)
+			info->search_depth = MAX_DEPTH;
+		else if (strength == 2) 
+			info->search_depth = 5;
+		else if (strength == 1) 
+			info->search_depth = 3;
+		else  {
+			std::cout << "Using strength = 3 as default, given strength: " << strength << endl;
+			info->search_depth = MAX_DEPTH;
+		}
+		
 		info->num_helper_threads = MAX_THREADS;
 		info->clear_tt_every_move = false;
 		info->starttime =
