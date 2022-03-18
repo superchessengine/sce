@@ -362,6 +362,10 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 
 	moves.clear();
 
+#ifdef USE_NN
+	StaticEvaluatorNN::nn_hits = 0;
+#endif
+
 	//	std::cout << "Depth: " << i << std::endl;
 	int val = negamax(pos, i, alpha, beta, color, info);
 

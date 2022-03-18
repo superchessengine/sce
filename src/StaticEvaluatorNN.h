@@ -171,6 +171,16 @@ class StaticEvaluatorNN {
 	  std::cout << x << std::endl;
 	}
   }
+  
+  static bool findAndGet(const libchess::Position &pos, int &score) {
+	auto entry = _tt->get(pos.hash());
+	if (entry->hash == pos.hash()) {
+	  score = entry->eval;
+	  return true;
+	}
+	
+	return false;
+  }
 
   static int no_of_nn_calls;
   static int hits;
