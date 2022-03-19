@@ -67,14 +67,12 @@ int StaticEvaluator::evaluate(const libchess::Position &position, SearchInfo *in
 	}
   }
 #ifdef USE_NN
-//        if (abs(score) > 300) return score;
-
-  // we only evaluated quiet positions in helper threads.
+  // we only evaluate quiet positions in helper threads.
   if (info->helper_thread)  {
 	int score_nn = 0;
 	
 	// if we have calculated score of this position with NN and the score is present in transposition table use that score.
-	if(StaticEvaluatorNN::findAndGet(position, &score_nn)) {
+	if(StaticEvaluatorNN::findAndGet(position, score_nn)) {
 		return score * 0.5 + score_nn * 0.5;
 	}
 	return score;

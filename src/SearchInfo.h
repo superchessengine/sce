@@ -32,10 +32,12 @@ struct SearchInfo {
   long long cutt_offs = 0;
 
   int ply = 0;
+
   /* Move Ordering */
   long history[2][7][64] = {0};
   // maxdepth = 100
   std::uint32_t killers[2][100] = {0};
+
   bool quit_search = false;
 
   std::chrono::milliseconds starttime;

@@ -9,6 +9,9 @@
 namespace sce
 {
 
+   std::map<std::string, int> uciToIndexMap;
+
+
   std::string get_board(const std::string &fen) noexcept
   {
     std::string board;
@@ -237,4 +240,22 @@ namespace sce
     return score < ENDGAME_THRESHOLD;
   }
 
+
+  void loadUciToIndexMap() {
+	std::ifstream i("uci_to_index.json");
+	nlohmann::json j;
+	i >> j;
+
+	for (nlohmann::json::iterator it = j.begin(); it != j.end(); ++it) {
+	  uciToIndexMap[it.key()] = it.value();
+	}
+
+	std::cout << "UCI to Index Map loaded successfully." << std::endl;
+  }
+
+  int moveToIndex(const libchess::Move &move) {
+	// move must not be zero.
+	assert(move != 0);
+	return uciToIndexMap[move];
+  }
 };

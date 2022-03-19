@@ -2,19 +2,30 @@
 
 #include <chrono>
 #include <iostream>
-#include "uci.h"
-#include "StaticEvaluatorNN.h"
-#include "StaticEvaluator.h"
-#include <stdio.h>
-#include <tensorflow/c/c_api.h>
 
-int main(int argc, char *argv[]) {
-  srand(time(nullptr));
-  // testing tensorlfow.
-  printf("Hello from TensorFlow C library version %s\n", TF_Version());
+#include "uci.h"
+#include "StaticEvaluator.h"
+#include "StaticEvaluatorNN.h"
+#include "utils.h"
+#include "constants.h"
+#include "MSTT.h"
+
 #ifdef USE_NN
+#include <tensorflow/c/c_api.h>
+#endif
+int main(int argc, char *argv[]) {
+#ifdef USE_MSNN
+  std::cout << sizeof(sce::MSTTEntry) << std::endl;
+#endif
+  srand(time(nullptr));
+#ifdef USE_NN
+  // testing tensorflow.
+  printf("Hello from TensorFlow C library version %s\n", TF_Version());
   sce::StaticEvaluatorNN::init();
 #endif
+
+  sce::loadUciToIndexMap();
+
   sce::SearchInfo *info = new sce::SearchInfo;
   info->helper_thread = false;
   std::cout << "StartPos: " << std::endl << sce::StaticEvaluator::evaluate(libchess::Position(

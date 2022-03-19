@@ -120,7 +120,7 @@ namespace sce
 			}
 		}
 
-		// save the search start time for time management
+
 		if(strength == 3)
 			info->search_depth = MAX_DEPTH;
 		else if (strength == 2) 
@@ -128,12 +128,14 @@ namespace sce
 		else if (strength == 1) 
 			info->search_depth = 3;
 		else  {
-			std::cout << "Using strength = 3 as default, given strength: " << strength << endl;
+			std::cout << "Using strength = 3 as default, given strength: " << strength << std::endl;
 			info->search_depth = MAX_DEPTH;
 		}
 		
 		info->num_helper_threads = MAX_THREADS;
 		info->clear_tt_every_move = false;
+
+	    // save the search start time for time management
 		info->starttime =
 			std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 

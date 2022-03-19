@@ -46,10 +46,10 @@ class StaticEvaluatorNN {
 	return ret;
   }
 
-  static float evaluateBoard(libchess::Position position) {
+  static float evaluateBoard(libchess::Position position, bool useTT = true) {
 
 	auto entry = _tt->get(position.hash());
-	if (entry->hash == position.hash()) {
+	if (entry->hash == position.hash() && useTT) {
 	  hits++;
 	  return entry->eval;
 	}
@@ -90,9 +90,6 @@ class StaticEvaluatorNN {
 		  scr[i] *= -1;
 		}
 
-//		std::cout << get_board_pretty(position.get_fen()) << std::endl;
-//		std::cout << scr[i] << std::endl << std::endl;
-
 		_tt->add({position.hash(), int(scr[i])});
 	  } else {
 		position.makemove(moves[i - 1]);
@@ -100,9 +97,6 @@ class StaticEvaluatorNN {
 		if (position.turn() != libchess::Side::White) {
 		  scr[i] *= -1;
 		}
-
-//		std::cout << get_board_pretty(position.get_fen()) << std::endl;
-//		std::cout << scr[i] << std::endl << std::endl;
 
 		_tt->add({position.hash(), int(scr[i])});
 

@@ -1,8 +1,9 @@
+
 //
 // Created by khushitshah on 2/15/22.
 //
 
-#include <iostream>
+#include<iostream>
 #include <algorithm>
 #include <chrono>
 #include <numeric>
@@ -12,6 +13,7 @@
 #include "utils.h"
 #include "SearchInfo.h"
 #include "SearchThread.h"
+#include "MoveSorterNN.h"
 
 namespace sce {
 Engine::Engine(TT *tt) {
@@ -36,7 +38,7 @@ Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color c
 
   // TODO: check performance with and without prefetch.
 
-  if (!info->helper_thread && info->nodes_searched & 2047) {
+  if (!info->helper_thread && info->nodes_searched & 4097) {
 	std::chrono::milliseconds cur =
 		std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::system_clock::now().time_since_epoch());
@@ -58,13 +60,27 @@ Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color c
 	return color * (StaticEvaluator::evaluate(pos, info) + info->ply);
   }
 
+#ifdef USE_NN
+    // we will SE all the child moves,
+	// create a batch and evaluate all child moves in one go.
+	// then use TT to store the values and access it at depth = 0.
+  	if(depth == 1 && !info->helper_thread) {
+		StaticEvaluatorNN::evaluateBoard(pos, false);
+  	}
+#endif
+
   if (depth <= 0) {
 #ifdef USE_NN
 	if (info->helper_thread) {
 	  return QuiescenceSearch(pos, alpha, beta, color, info);
 	} else {
-	  return color * StaticEvaluator::evaluate(pos, info);
+	  // hack to disable nn eval in Quiescence search.
+	  info->helper_thread = true;
+	  int score =  color * StaticEvaluatorNN::evaluateBoard(pos, true) * 0.4 + QuiescenceSearch(pos, alpha, beta, color, info) * 0.6;
+	  info->helper_thread = false;
+	  return score;
 	}
+
 #endif
 	return QuiescenceSearch(pos, alpha, beta, color, info);
   }
@@ -119,21 +135,19 @@ Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color c
 				libchess::Move()};
   for (int i = 0; i < childMoves.size(); i++) {
 	sortNextMove(i, childMoves);
+	sortNextMove(i, childMoves);
 	auto &move = childMoves[i];
-	if (!is_endgame(pos) && depth >= 5
-		&& ((i >= 3 && move.first.is_capturing() && move.second <= (4600 + 1000000)) || i >= 6))
+	if (!is_endgame(pos) && i >= get_prune_move(depth, childMoves.size()))
 	  break;
-	if (info->search_depth == depth && !info->helper_thread) {
-	  std::cout << move.first << std::endl;
-	}
+
 	int moveScore = 0;
 	pos.makemove(move.first);
 	info->ply++;
 	info->null_move = true;
 	// if we are searching  with the score of bad captures.
 	// late move reductions
-	if (i >= 2 && depth >= 5 && !pos.in_check() && !is_endgame(pos)) {
-	  moveScore = -negamax(pos, (int)(depth / 1.5f), -beta, -alpha, -color, info);
+	if (i >= 2 && depth >= 7 && !pos.in_check() && !is_endgame(pos)) {
+	  moveScore = -negamax(pos, (depth / 2), -beta, -alpha, -color, info);
 	  if (moveScore > alpha) {
 		moveScore = -negamax(pos, depth - 1, -beta, -alpha, -color, info);
 	  }
@@ -209,7 +223,7 @@ int Engine::QuiescenceSearch(libchess::Position &pos, int alpha, int beta, Color
   }
   int score = color * StaticEvaluator::evaluate(pos, info);
 
-  if (!info->helper_thread && info->nodes_searched & 2047) {
+  if (!info->helper_thread && info->nodes_searched & 4097) {
 	auto cur =
 		std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::high_resolution_clock::now().time_since_epoch());
@@ -306,13 +320,12 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
   info->null_cutoffs = 0;
   info->quit_search = false;
 
-  auto t1 = std::chrono::high_resolution_clock::now();
+
 
   int alpha = -INF;
   int beta = INF;
 
   std::vector<libchess::Move> _ = pos.legal_moves();
-  //  std::cout << pos.get_fen() << std::endl;
   for (int k = 0; k < info->num_helper_threads; k++) {
 	auto helperInfo = new SearchInfo();
 	helperInfo->helper_thread = true;
@@ -337,13 +350,15 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 	  helperInfo->search_depth = i;
 	  helperInfo->terminate_helpers = false;
 	  helperInfo->is_root = true;
-	  helperInfo->ply = 0;
+	  helperInfo->ply = pos.halfmoves();
 	  helperInfo->quit_search = false;
 
 	  helperInfo->cutt_offs = 0;
 	  helperInfo->null_cutoffs = 0;
 	  helperInfo->nodes_searched = 0;
 	  helperInfo->ttHits = 0;
+	  helperInfo->fh = 0;
+	  helperInfo->fhf = 0;
 
 	  _threads[k]->setRootPos(pos);
 	  _threads[k]->start_searching(alpha, beta);
@@ -351,7 +366,7 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 
 	info->helper_thread = false;
 	info->is_root = true;
-	info->ply = 0;
+	info->ply = pos.halfmoves();
 
 	info->cutt_offs = 0;
 	info->null_cutoffs = 0;
@@ -363,10 +378,12 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 	moves.clear();
 
 #ifdef USE_NN
-	StaticEvaluatorNN::nn_hits = 0;
+	StaticEvaluatorNN::no_of_nn_calls = 0;
 #endif
 
-	//	std::cout << "Depth: " << i << std::endl;
+	std::cout << "Depth: " << i << std::endl;
+	auto t1 = std::chrono::high_resolution_clock::now();
+
 	int val = negamax(pos, i, alpha, beta, color, info);
 
 	auto d1 = std::chrono::high_resolution_clock::now();
@@ -374,20 +391,28 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 	long long nodes_searched = info->nodes_searched;
 	long long cutoffs = info->cutt_offs;
 	long long null_cutoffs = info->null_cutoffs;
+	long long fh = info->fh;
+	long long fhf = info->fhf;
+	long long ttHits = info->ttHits;
+
 	for (int k = 0; k < info->num_helper_threads; k++) {
 	  nodes_searched += _threads[k]->getSearchInfo()->nodes_searched;
 	  cutoffs += _threads[k]->getSearchInfo()->cutt_offs;
 	  null_cutoffs += _threads[k]->getSearchInfo()->null_cutoffs;
+	  fh += _threads[k]->getSearchInfo()->fh;
+	  fhf += _threads[k]->getSearchInfo()->fhf;
+	  ttHits += _threads[k]->getSearchInfo()->ttHits;
+
 	  _threads[k]->wait_for_search_to_finish();
 	}
 	auto entry = _tt->get(pos.hash());
 
-	std::cout << "info depth " << i << " score cp " << (entry->eval) << " ttHits " << info->ttHits << " nodes "
-			  << info->nodes_searched << " time " << search_time << " hashfull " << _tt->hashfull() << " nps "
+	std::cout << "info depth " << i << " score cp " << (entry->eval) << " ttHits " << ttHits << " nodes "
+			  << nodes_searched << " time " << search_time << " hashfull " << _tt->hashfull() << " nps "
 			  << (nodes_searched * 1000 / (search_time + 1))
 			  << " cutoff " << cutoffs
 			  << " null " << null_cutoffs
-			  << " ordering " << (info->fhf / (float)(info->fh + 1)) * 100
+			  << " ordering " << (fhf / (float)(fh + 1)) * 100
 			  #ifdef USE_NN
 			  << " nn_hits " << StaticEvaluatorNN::hits
 			  #endif
@@ -402,9 +427,6 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
 
 	i++;
   }
-  auto d1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t1);
-  info->search_time += d1.count();
-
   info->search_depth = -1;
 
   auto entry = _tt->get(pos.hash());
@@ -418,6 +440,15 @@ void Engine::set_scores(libchess::Position &pos,
 						bool q) const noexcept {
 
   auto entry = _tt->get(pos.hash());
+
+// TODO: update after better move sorter model.
+// MoveSorterNN::scoreMoves(pos, mvs);
+//
+//  for(auto &move : mvs) {
+//	std::cout << move.first << " " << move.second << std::endl;
+//  }
+//
+//  exit(0);
 
   for (auto &move : mvs) {
 	move.second = 0;
@@ -460,5 +491,12 @@ void Engine::sortNextMove(int index, std::vector<std::pair<libchess::Move, int>>
   }
 
   std::swap(mvs[index], mvs[bestIndex]);
+}
+int Engine::get_prune_move(int depth, unsigned long long int size) {
+  if(depth <= 4) return size;
+  else if(depth <= 6) return size * 0.75;
+  else if(depth <= 8) return size * 0.50;
+  else if(depth <= 10) return size * 0.25;
+  else return 3;
 }
 }

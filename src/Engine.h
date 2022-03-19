@@ -36,6 +36,7 @@ class Engine {
 
   int QuiescenceSearch(libchess::Position &pos, int alpha, int beta, Color color, SearchInfo *info) noexcept;
 
+  int get_prune_move(int depth, unsigned long long int size);
 };
 }
 #endif //SCE_ENGINE_H
