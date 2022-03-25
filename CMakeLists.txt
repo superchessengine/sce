@@ -9,10 +9,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -DNDEBUG")
 
 
-
-# include_directories(${CMAKE_SOURCE_DIR}/libs/libchess/src/libchess)
-
-
 ADD_DEFINITIONS(-D USE_NN=1)
 #ADD_DEFINITIONS(-D USE_MSNN=1)
 

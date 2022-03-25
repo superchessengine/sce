@@ -14,7 +14,7 @@
 namespace sce {
 struct MSTTEntry {
   std::uint64_t hash{};
-  std::map<std::uint16_t, std::uint8_t> *moves;
+  std::map<std::uint16_t, int> *moves;
 };
 
 class MSTT {
@@ -34,7 +34,7 @@ class MSTT {
   }
 
   ~MSTT() {
-	for(int i = 0; i < _size; i ++) {
+	for (int i = 0; i < _size; i++) {
 	  delete _entries[i].moves;
 	}
 	delete _entries;
@@ -46,9 +46,10 @@ class MSTT {
 
   void add(const MSTTEntry &entry) {
 	const auto idx = index(entry.hash);
+
 	_filled += _entries[idx].hash == 0 ? 1 : 0;
 
-	if(_entries[idx].hash != 0) {
+	if (_entries[idx].hash != 0) {
 	  delete _entries[idx].moves;
 	}
 
@@ -65,7 +66,7 @@ class MSTT {
 
   void clear() noexcept {
 	_filled = 0;
-	for(int i = 0; i < _size; i ++) {
+	for (int i = 0; i < _size; i++) {
 	  delete _entries[i].moves;
 	}
 	std::memset(_entries, 0, _size * sizeof(MSTTEntry));

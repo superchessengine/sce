@@ -256,6 +256,6 @@ namespace sce
   int moveToIndex(const libchess::Move &move) {
 	// move must not be zero.
 	assert(move != 0);
-	return uciToIndexMap[move];
+	return uciToIndexMap[(std::string) move];
   }
 };

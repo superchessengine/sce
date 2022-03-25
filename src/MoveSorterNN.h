@@ -21,27 +21,30 @@ class MoveSorterNN {
   static MSTT *_tt;
  public:
 
-  static void evaluate(float *input_arr, int cnt, uint8_t op[][1970]) {
+  static void evaluate(float *input_arr, int cnt, int op[][1970]) {
 	no_of_nn_calls++;
 
 	auto input = cppflow::tensor(std::vector<float>(input_arr, input_arr + cnt * 9 * 8 * 12), {cnt, 9 * 8 * 12});
 
 	auto output = model({{"serving_default_dense_input", input}}, {{"StatefulPartitionedCall"}});
 
-	std::cout << output[0].shape() << std::endl;
+//	std::cout << output[0].shape() << std::endl;
 
-	auto outputTensor = (double *)TF_TensorData(output[0].get_tensor().get());
+	auto outputTensor = (float *)TF_TensorData(output[0].get_tensor().get());
 
 	for (int i = 0; i < cnt; i++) {
 	  for (int j = 0; j < 1970; j++) {
-		op[i][j] = (int)outputTensor[i * 1970 + j] * (254);
+		op[i][j] = (int)(outputTensor[i * 1970 + j] * (100000));
+//		std::cout << j << " " << op[i][j] << std::endl;
 	  }
 	}
   }
 
-  static void assign_scores(std::vector<std::pair<libchess::Move, int>> &moves_, uint8_t scores[1970]) {
-	for (auto move : moves_) {
+  static void assign_scores(std::vector<std::pair<libchess::Move, int>> &moves_, int scores[1970]) {
+	for (auto &move : moves_) {
 	  int index = sce::moveToIndex(move.first);
+
+//	  std::cout << move.first << " " << index << " " << scores[index] << std::endl;
 
 	  assert(index >= 0);
 
@@ -50,7 +53,7 @@ class MoveSorterNN {
 	}
   }
 
-  static void get_nn_op_from_map(std::map<uint16_t, uint8_t> mp_, uint8_t nnOp[1970]) {
+  static void get_nn_op_from_map(std::map<uint16_t, int> mp_, int nnOp[1970]) {
 	for (int i = 0; i < 1970; i++) {
 	  // default value will be zero if the key is not found in the map.
 	  nnOp[i] = mp_[i];
@@ -64,7 +67,7 @@ class MoveSorterNN {
 	if (entry->hash == position.hash()) {
 	  hits++;
 
-	  uint8_t nn_output[1970];
+	  int nn_output[1970];
 
 	  get_nn_op_from_map(*entry->moves, nn_output);
 
@@ -99,15 +102,17 @@ class MoveSorterNN {
 	  }
 	}
 
-	uint8_t moveScore[cnt][1970];
+	int moveScore[cnt][1970];
 	evaluate(&input_arr[0][0], cnt, moveScore);
 
 	for (int i = 0; i < cnt; i++) {
 	  if (i == 0) {
 		MSTTEntry entry;
 
+		assign_scores(moves_, moveScore[i]);
+
 		entry.hash = position.hash();
-		entry.moves = new std::map<uint16_t , uint8_t>();
+		entry.moves = new std::map<uint16_t , int>();
 
 		// only store values of all the valid moves in given position in the transposition table.
 		auto curMoves = position.legal_moves();
@@ -116,7 +121,6 @@ class MoveSorterNN {
 		  (*entry.moves)[moveToIndex(move)] = moveScore[i][moveToIndex(move)];
 		}
 
-		assign_scores(moves_, moveScore[i]);
 
 		_tt->add(entry);
 	  } else {
@@ -125,7 +129,7 @@ class MoveSorterNN {
 		MSTTEntry entry;
 
 		entry.hash = position.hash();
-		entry.moves = new std::map<uint16_t, uint8_t>();
+		entry.moves = new std::map<uint16_t, int>();
 
 		auto curMoves = position.legal_moves();
 
@@ -181,22 +185,9 @@ class MoveSorterNN {
 		index++;
 	  }
 	}
-	// print the input_arr[cntIndex] for debugging.
-//	for(int i = 0; i < 9; i ++) {
-//	  for(int j = 0; j < 8; j ++) {
-//		for(int k = 0; k < 12; k ++) {
-//		  std::cout << input_arr[cntIndex][i*8*12 + j*12 + k];
-//		}
-//		std::cout << ", ";
-//	  }
-//	  std::cout << std::endl;
-//	}
   }
 
   static void init() {
-	for (auto x : model.get_operations()) {
-	  std::cout << x << std::endl;
-	}
   }
 
   static bool findAndGet(const libchess::Position &pos, std::vector<std::pair<libchess::Move, int>> &moves_) {
@@ -204,7 +195,7 @@ class MoveSorterNN {
 
 	if (entry->hash == pos.hash()) {
 
-	  uint8_t nnOp[1970];
+	  int nnOp[1970];
 
 	  get_nn_op_from_map(*entry->moves, nnOp);
 

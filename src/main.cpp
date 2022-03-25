@@ -6,14 +6,18 @@
 #include "uci.h"
 #include "StaticEvaluator.h"
 #include "StaticEvaluatorNN.h"
+#include "MoveSorterNN.h"
 #include "utils.h"
 #include "constants.h"
-#include "MSTT.h"
 
 #ifdef USE_NN
 #include <tensorflow/c/c_api.h>
 #endif
 int main(int argc, char *argv[]) {
+
+  sce::loadUciToIndexMap();
+
+
 #ifdef USE_MSNN
   std::cout << sizeof(sce::MSTTEntry) << std::endl;
 #endif
@@ -22,9 +26,19 @@ int main(int argc, char *argv[]) {
   // testing tensorflow.
   printf("Hello from TensorFlow C library version %s\n", TF_Version());
   sce::StaticEvaluatorNN::init();
+
+  // testing move sorter NN
+//  std::vector<std::pair<libchess::Move, int>> moves;
+//  libchess::Position pos = libchess::Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+//  for (auto move : pos.legal_moves()) {
+//	moves.push_back(std::make_pair(move, -1));
+//  }
+//  sce::MoveSorterNN::scoreMoves(pos, moves);
+//  for(auto move: moves) {
+//	std::cout << move.first << " " << move.second << std::endl;
+//  }
 #endif
 
-  sce::loadUciToIndexMap();
 
   sce::SearchInfo *info = new sce::SearchInfo;
   info->helper_thread = false;

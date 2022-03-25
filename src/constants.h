@@ -15,8 +15,18 @@ typedef int Color;
 const std::uint16_t VAL_STATIC_EVAL = 10;
 
 const std::uint16_t MAX_TT_SIZE = 256;
+
+#ifdef USE_NN
 const std::uint16_t SETT_SIZE = 256;
-const std::uint16_t MSTT_SIZE = 256;
+#else
+const std::uint16_t SETT_SIZE = 10;
+#endif
+
+#ifdef USE_MSNN
+const std::uint16_t MSTT_SIZE = 50;
+#else
+const std::uint16_t MSTT_SIZE = 10;
+#endif
 
 const std::uint16_t MAX_DEPTH = 60;
 const std::uint8_t MAX_THREADS = 1;

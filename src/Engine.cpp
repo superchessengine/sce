@@ -6,7 +6,6 @@
 #include<iostream>
 #include <algorithm>
 #include <chrono>
-#include <numeric>
 #include "Engine.h"
 #include "StaticEvaluator.h"
 #include "StaticEvaluatorNN.h"
@@ -61,12 +60,12 @@ Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color c
   }
 
 #ifdef USE_NN
-    // we will SE all the child moves,
-	// create a batch and evaluate all child moves in one go.
-	// then use TT to store the values and access it at depth = 0.
-  	if(depth == 1 && !info->helper_thread) {
-		StaticEvaluatorNN::evaluateBoard(pos, false);
-  	}
+  // we will SE all the child moves,
+  // create a batch and evaluate all child moves in one go.
+  // then use TT to store the values and access it at depth = 0.
+  if (depth == 1 && !info->helper_thread) {
+	StaticEvaluatorNN::evaluateBoard(pos, false);
+  }
 #endif
 
   if (depth <= 0) {
@@ -76,11 +75,11 @@ Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color c
 	} else {
 	  // hack to disable nn eval in Quiescence search.
 	  info->helper_thread = true;
-	  int score =  color * StaticEvaluatorNN::evaluateBoard(pos, true) * 0.4 + QuiescenceSearch(pos, alpha, beta, color, info) * 0.6;
+	  int score = color * StaticEvaluatorNN::evaluateBoard(pos, true) * 0.4
+		  + QuiescenceSearch(pos, alpha, beta, color, info) * 0.6;
 	  info->helper_thread = false;
 	  return score;
 	}
-
 #endif
 	return QuiescenceSearch(pos, alpha, beta, color, info);
   }
@@ -135,8 +134,8 @@ Engine::negamax(libchess::Position &pos, int depth, int alpha, int beta, Color c
 				libchess::Move()};
   for (int i = 0; i < childMoves.size(); i++) {
 	sortNextMove(i, childMoves);
-	sortNextMove(i, childMoves);
 	auto &move = childMoves[i];
+
 	if (!is_endgame(pos) && i >= get_prune_move(depth, childMoves.size()))
 	  break;
 
@@ -320,8 +319,6 @@ std::vector<std::pair<libchess::Move, int>> Engine::get_moves(libchess::Position
   info->null_cutoffs = 0;
   info->quit_search = false;
 
-
-
   int alpha = -INF;
   int beta = INF;
 
@@ -441,13 +438,18 @@ void Engine::set_scores(libchess::Position &pos,
 
   auto entry = _tt->get(pos.hash());
 
-// TODO: update after better move sorter model.
-// MoveSorterNN::scoreMoves(pos, mvs);
-//
-//  for(auto &move : mvs) {
-//	std::cout << move.first << " " << move.second << std::endl;
-//  }
-//
+#ifdef USE_MSNN
+  // TODO: update after better move sorter model.
+  if (entry->hash != pos.hash()) {
+	MoveSorterNN::scoreMoves(pos, mvs);
+  }
+#endif
+
+  if (info->is_root && !info->helper_thread && entry->hash != pos.hash())
+	for (auto &move : mvs) {
+	  std::cout << move.first << " " << move.second << std::endl;
+	}
+
 //  exit(0);
 
   for (auto &move : mvs) {
@@ -492,11 +494,12 @@ void Engine::sortNextMove(int index, std::vector<std::pair<libchess::Move, int>>
 
   std::swap(mvs[index], mvs[bestIndex]);
 }
+
 int Engine::get_prune_move(int depth, unsigned long long int size) {
-  if(depth <= 4) return size;
-  else if(depth <= 6) return size * 0.75;
-  else if(depth <= 8) return size * 0.50;
-  else if(depth <= 10) return size * 0.25;
+  if (depth <= 4) return size;
+  else if (depth <= 6) return size * 0.75;
+  else if (depth <= 8) return size * 0.50;
+  else if (depth <= 10) return size * 0.25;
   else return 3;
 }
 }
