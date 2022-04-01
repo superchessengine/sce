@@ -1,5 +1,7 @@
 # SuperChessEngine
 
+website: superchessengine.github.io
+
 ### Installation
 
 - Build `libchess` library.
