@@ -1,6 +1,6 @@
 # SuperChessEngine
 
-website: superchessengine.github.io
+website: [superchessengine.github.io]
 
 ### Installation
 
